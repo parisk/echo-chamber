@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Echo Chamber</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Noto+Serif|Oxygen+Mono&display=swap" rel="stylesheet">
+
+  <style>
+    html, body {
+      margin: 0;
+      height: 100vh;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: 'Noto Serif', serif;
+      font-size: 1.5rem;
+      line-height: 1.5;
+    }
+
+    header, main, footer {
+      width: 960px;
+    }
+
+    header, footer {
+      text-align: center;
+      padding: 1ch 0;
+    }
+
+    main {
+      flex: 1;
+    }
+
+    h1 {
+      margin: 0;
+      padding: 0;
+      line-height: 1.5;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 1ch;
+      line-height: 1.5;
+    }
+
+    p {
+      line-height: 1.5;
+    }
+
+    input {
+      margin: 0;
+      padding: 0 1ch;
+      line-height: 1.5;
+      font-size: 1.5rem;
+    }
+
+    .container {
+      margin: 0 auto;
+    }
+
+    .subcontainer:not(:last-child) {
+      margin-bottom: 2ch;
+    }
+
+    .incoming-message::before {
+    	content: "👈 ";
+    }
+
+    .outgoing-message::before {
+    	content: "👉 ";
+    }
+
+    #websocket-logs {
+      background: #f5f5f5;
+      border-radius: 0.625rem;
+      padding: 2ch;
+      font-family: 'Oxygen Mono', monospace;
+      max-height: 50vh;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Echo Chamber</h1>
+    <p class="subtitle">Welcome to the Echo Chamber, a web app demostrating WebSocket usage with Django Channels!</p>
+  </header>
+
+  <main>
+    <div class="container">
+      <div class="subcontainer">
+        <label for="character-input">Input</label>
+        <input id="character-input" type="text" autocomplete="off" autofocus />
+      </div>
+
+      <div class="subcontainer">
+        <label for="websocket-logs">WebSocket logs</label>
+        <div id="websocket-logs"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+  	This is <a href="https://github.com/parisk/echo-chamber">open source software</a>, built in a browser using <a href="https://www.sourcelair.com">SourceLair</a>.
+  </footer>
+
+  <script>
+    const wsProtocol = (location.protocol == "https:") ? "wss:" : "ws:"
+    const ws = new WebSocket(`${wsProtocol}//${location.hostname}/echo/`)
+
+    const characterInput = document.querySelector("#character-input")
+    const websocketLogs = document.querySelector("#websocket-logs")
+
+    ws.addEventListener("message", e => {
+      const incomingMessage = document.createElement('div')
+      incomingMessage.classList.add('incoming-message')
+      incomingMessage.textContent = e.data
+
+      websocketLogs.appendChild(incomingMessage)
+        websocketLogs.scrollTop = websocketLogs.scrollHeight
+    });
+
+    characterInput.addEventListener("input", e => {
+      if (e.data) {
+        const message = JSON.stringify({
+          "ch": e.data,
+        })
+        ws.send(message);
+
+        const outgoingMessage = document.createElement('div')
+        outgoingMessage.classList.add('outgoing-message')
+        outgoingMessage.textContent = message
+
+        websocketLogs.appendChild(outgoingMessage)
+        websocketLogs.scrollTop = websocketLogs.scrollHeight
+      }
+    });
+  </script>
+</body>
+</html>
